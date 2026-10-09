@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { deleteTransaction } from "@/actions/transaction";
 import { showToast } from "@/components/admin/Toaster";
+import { IconTrash } from "@/components/icons";
 
 export default function DeleteTransactionButton({ id }: { id: number }) {
   const [pending, startTransition] = useTransition();
@@ -23,9 +24,11 @@ export default function DeleteTransactionButton({ id }: { id: number }) {
       type="button"
       onClick={onClick}
       disabled={pending}
-      className="touch-manipulation rounded-xl bg-red-600 px-5 py-3 text-lg font-bold text-white active:bg-red-800 disabled:bg-slate-300"
+      aria-label={`Padam transaksi ${id}`}
+      title="Padam"
+      className="inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-xl bg-rose-50 text-rose-600 ring-1 ring-rose-200 transition active:scale-95 active:bg-rose-100 disabled:opacity-50"
     >
-      {pending ? "Sila tunggu..." : "Padam"}
+      <IconTrash />
     </button>
   );
 }

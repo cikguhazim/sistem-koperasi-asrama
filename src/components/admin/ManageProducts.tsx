@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { deleteProduct, updateProduct } from "@/actions/manage";
 import type { ActionResult } from "@/actions/inventory";
+import { alertErr, alertOk, btnDanger, btnPrimary } from "@/lib/ui";
+import { IconBox, IconSave, IconTrash } from "@/components/icons";
 
 export type ManagedProduct = {
   id: number;
@@ -13,8 +15,9 @@ export type ManagedProduct = {
   stock: number;
 };
 
-const inputClass =
-  "w-full rounded-xl border-2 border-slate-300 p-4 text-xl focus:border-blue-600 focus:outline-none";
+const softInput =
+  "mt-1 min-h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100";
+const smallLabel = "block text-xs font-semibold uppercase tracking-wide text-slate-500";
 
 function ProductRow({ product }: { product: ManagedProduct }) {
   const [stock, setStock] = useState(String(product.stock));
@@ -40,83 +43,74 @@ function ProductRow({ product }: { product: ManagedProduct }) {
   }
 
   return (
-    <div className="space-y-4 rounded-2xl border-2 border-slate-200 p-5">
+    <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
       <div className="flex items-center gap-4">
         {product.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={product.imageUrl}
             alt={product.name}
-            className="h-20 w-20 rounded-xl object-cover"
+            className="h-16 w-16 shrink-0 rounded-xl object-cover ring-1 ring-slate-200"
           />
         ) : (
-          <div className="h-20 w-20 rounded-xl bg-slate-200" />
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-300">
+            <IconBox width="1.8em" height="1.8em" />
+          </div>
         )}
-        <div>
-          <p className="text-2xl font-bold">{product.name}</p>
-          <p className="text-lg text-slate-500">{product.category}</p>
+        <div className="min-w-0">
+          <p className="truncate text-xl font-bold">{product.name}</p>
+          <span className="mt-1 inline-block rounded-full bg-slate-100 px-3 py-0.5 text-sm font-medium text-slate-600">
+            {product.category}
+          </span>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[8rem_8rem_1fr]">
-        <label className="block space-y-2 text-lg">
-          <span>Harga Kupon</span>
+      <div className="grid grid-cols-2 gap-3">
+        <label className={smallLabel}>
+          Harga Kupon
           <input
             type="number"
+            inputMode="numeric"
             min={1}
             step={1}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className={inputClass}
+            className={softInput}
           />
         </label>
-        <label className="block space-y-2 text-lg">
-          <span>Stok Semasa</span>
+        <label className={smallLabel}>
+          Stok Semasa
           <input
             type="number"
+            inputMode="numeric"
             min={0}
             step={1}
             value={stock}
             onChange={(e) => setStock(e.target.value)}
-            className={inputClass}
-          />
-        </label>
-        <label className="block space-y-2 text-lg">
-          <span>URL Gambar</span>
-          <input
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            className={inputClass}
+            className={softInput}
           />
         </label>
       </div>
+      <label className={smallLabel}>
+        URL Gambar
+        <input
+          type="url"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          placeholder="https://..."
+          className={softInput}
+        />
+      </label>
 
-      {result && (
-        <p
-          className={`rounded-xl p-4 text-lg font-semibold ${
-            result.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-        >
-          {result.message}
-        </p>
-      )}
+      {result && <p className={result.success ? alertOk : alertErr}>{result.message}</p>}
 
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          type="button"
-          onClick={onUpdate}
-          disabled={pending}
-          className="touch-manipulation rounded-2xl bg-blue-600 p-6 text-xl font-bold text-white active:bg-blue-800 disabled:bg-slate-300"
-        >
+      <div className="grid grid-cols-2 gap-3">
+        <button type="button" onClick={onUpdate} disabled={pending} className={btnPrimary}>
+          <IconSave />
           {pending ? "Sila tunggu..." : "Kemaskini"}
         </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={pending}
-          className="touch-manipulation rounded-2xl bg-red-600 p-6 text-xl font-bold text-white active:bg-red-800 disabled:bg-slate-300"
-        >
+        <button type="button" onClick={onDelete} disabled={pending} className={btnDanger}>
+          <IconTrash />
           Padam
         </button>
       </div>
@@ -126,10 +120,14 @@ function ProductRow({ product }: { product: ManagedProduct }) {
 
 export default function ManageProducts({ products }: { products: ManagedProduct[] }) {
   if (products.length === 0) {
-    return <p className="text-xl text-slate-500">Tiada produk untuk diurus.</p>;
+    return (
+      <p className="rounded-xl bg-slate-50 p-4 text-lg text-slate-500">
+        Tiada produk untuk diurus.
+      </p>
+    );
   }
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-5 md:grid-cols-2">
       {products.map((p) => (
         // key termasuk nilai pelayan supaya borang dimuat semula selepas kemaskini
         <ProductRow key={`${p.id}-${p.priceInCoupons}-${p.stock}-${p.imageUrl ?? ""}`} product={p} />

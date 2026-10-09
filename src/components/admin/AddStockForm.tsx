@@ -2,11 +2,10 @@
 
 import { useRef, useState, useTransition } from "react";
 import { addStock, type ActionResult } from "@/actions/inventory";
+import { alertErr, alertOk, btnSuccess, card, input, label } from "@/lib/ui";
+import { IconPlus } from "@/components/icons";
 
 export type StockProduct = { id: number; name: string; stock: number };
-
-const inputClass =
-  "w-full rounded-xl border-2 border-slate-300 bg-white p-4 text-xl focus:border-blue-600 focus:outline-none";
 
 export default function AddStockForm({ products }: { products: StockProduct[] }) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -22,20 +21,23 @@ export default function AddStockForm({ products }: { products: StockProduct[] })
   }
 
   return (
-    <form
-      ref={formRef}
-      action={onSubmit}
-      className="space-y-5 rounded-2xl bg-white p-6 shadow"
-    >
-      <h2 className="text-2xl font-bold">Tambah Stok</h2>
+    <form ref={formRef} action={onSubmit} className={`${card} space-y-4 p-6`}>
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+          <IconPlus width="1.4em" height="1.4em" />
+        </span>
+        <h2 className="text-xl font-bold">Tambah Stok</h2>
+      </div>
 
       {products.length === 0 ? (
-        <p className="text-xl text-slate-500">Tiada produk lagi. Tambah produk dahulu.</p>
+        <p className="rounded-xl bg-slate-50 p-4 text-lg text-slate-500">
+          Tiada produk lagi. Tambah produk dahulu.
+        </p>
       ) : (
         <>
-          <label className="block space-y-2 text-xl">
-            <span>Produk</span>
-            <select name="productId" required defaultValue="" className={inputClass}>
+          <label className={label}>
+            Produk
+            <select name="productId" required defaultValue="" className={input}>
               <option value="" disabled>
                 Pilih produk...
               </option>
@@ -47,28 +49,30 @@ export default function AddStockForm({ products }: { products: StockProduct[] })
             </select>
           </label>
 
-          <label className="block space-y-2 text-xl">
-            <span>Kuantiti</span>
-            <input name="quantity" type="number" min={1} step={1} required className={inputClass} />
+          <label className={label}>
+            Kuantiti
+            <input
+              name="quantity"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              step={1}
+              required
+              placeholder="cth: 20"
+              className={input}
+            />
           </label>
         </>
       )}
 
-      {result && (
-        <p
-          className={`rounded-xl p-4 text-xl font-semibold ${
-            result.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-        >
-          {result.message}
-        </p>
-      )}
+      {result && <p className={result.success ? alertOk : alertErr}>{result.message}</p>}
 
       <button
         type="submit"
         disabled={pending || products.length === 0}
-        className="w-full touch-manipulation rounded-2xl bg-green-600 p-6 text-xl font-bold text-white active:bg-green-800 disabled:bg-slate-300"
+        className={`${btnSuccess} w-full`}
       >
+        <IconPlus />
         {pending ? "Menyimpan..." : "Tambah Stok"}
       </button>
     </form>

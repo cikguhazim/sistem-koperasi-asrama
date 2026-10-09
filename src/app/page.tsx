@@ -24,7 +24,11 @@ async function Products() {
 export default function Home() {
   return (
     <Suspense
-      fallback={<p className="p-6 text-2xl">Memuatkan produk...</p>}
+      fallback={
+        <div className="flex h-dvh items-center justify-center bg-slate-50 text-xl text-slate-400">
+          Memuatkan produk...
+        </div>
+      }
     >
       <Products />
     </Suspense>

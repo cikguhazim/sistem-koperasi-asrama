@@ -1,5 +1,9 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { login } from "@/actions/auth";
+import PasswordField from "@/components/PasswordField";
+import { alertErr, btnPrimary, card, label } from "@/lib/ui";
+import { IconArrowLeft, IconLock } from "@/components/icons";
 
 async function LoginForm({
   searchParams,
@@ -9,36 +13,33 @@ async function LoginForm({
   const { error } = await searchParams;
 
   return (
-    <form
-      action={login}
-      className="w-full max-w-md space-y-5 rounded-2xl bg-white p-8 shadow"
-    >
-      <h1 className="text-3xl font-bold">Log Masuk</h1>
-      <p className="text-xl text-slate-600">Khas untuk pentadbir koperasi.</p>
+    <form action={login} className={`${card} w-full max-w-md space-y-6 p-8 shadow-md`}>
+      <div className="space-y-3 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md">
+          <IconLock width="1.8em" height="1.8em" />
+        </div>
+        <h1 className="text-3xl font-bold">Log Masuk</h1>
+        <p className="text-base text-slate-500">Khas untuk pentadbir koperasi.</p>
+      </div>
 
-      <label className="block space-y-2 text-xl">
-        <span>Kata Laluan</span>
-        <input
-          name="password"
-          type="password"
-          required
-          autoFocus
-          className="w-full rounded-xl border-2 border-slate-300 p-4 text-xl focus:border-blue-600 focus:outline-none"
-        />
+      <label className={label}>
+        Kata Laluan
+        <PasswordField />
       </label>
 
-      {error && (
-        <p className="rounded-xl bg-red-100 p-4 text-xl font-semibold text-red-800">
-          Kata laluan salah. Sila cuba lagi.
-        </p>
-      )}
+      {error && <p className={alertErr}>Kata laluan salah. Sila cuba lagi.</p>}
 
-      <button
-        type="submit"
-        className="w-full touch-manipulation rounded-2xl bg-blue-600 p-6 text-xl font-bold text-white active:bg-blue-800"
-      >
+      <button type="submit" className={`${btnPrimary} min-h-14 w-full text-xl`}>
         Log Masuk
       </button>
+
+      <Link
+        href="/"
+        className="flex min-h-11 items-center justify-center gap-2 text-base font-medium text-slate-500 transition active:text-slate-800"
+      >
+        <IconArrowLeft />
+        Kembali ke POS
+      </Link>
     </form>
   );
 }
@@ -49,8 +50,8 @@ export default function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6 text-slate-900">
-      <Suspense fallback={<p className="text-2xl">Memuatkan...</p>}>
+    <main className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-indigo-50 p-6 text-slate-900">
+      <Suspense fallback={<p className="text-xl text-slate-400">Memuatkan...</p>}>
         <LoginForm searchParams={searchParams} />
       </Suspense>
     </main>

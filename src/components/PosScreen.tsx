@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { completeSale } from "@/actions/checkout";
+import { alertErr, alertOk, btnDark } from "@/lib/ui";
+import {
+  IconBox,
+  IconCart,
+  IconCheck,
+  IconCoins,
+  IconGear,
+  IconMinus,
+  IconPlus,
+} from "@/components/icons";
 
 export type PosProduct = {
   id: number;
@@ -15,17 +25,88 @@ export type PosProduct = {
 
 type Notice = { kind: "ok" | "error"; text: string } | null;
 
+const LOW_STOCK = 5;
+
+// Kesan sama ada dibuka sebagai aplikasi (Skrin Utama iPad) dan bukan dalam Safari.
+function subscribeStandalone(cb: () => void) {
+  const m = window.matchMedia("(display-mode: standalone)");
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+}
+function getStandalone() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
+}
+
+function Stepper({
+  qty,
+  onMinus,
+  onPlus,
+  plusDisabled,
+  label,
+}: {
+  qty: number;
+  onMinus: () => void;
+  onPlus: () => void;
+  plusDisabled: boolean;
+  label: string;
+}) {
+  const btn =
+    "flex h-12 w-12 touch-manipulation items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition active:scale-95 active:bg-slate-100 disabled:opacity-40";
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-2xl bg-slate-100 p-1.5">
+      <button type="button" onClick={onMinus} className={btn} aria-label={`Kurangkan ${label}`}>
+        <IconMinus />
+      </button>
+      <span className="min-w-8 text-center text-xl font-bold tabular-nums">{qty}</span>
+      <button
+        type="button"
+        onClick={onPlus}
+        disabled={plusDisabled}
+        className={btn}
+        aria-label={`Tambah ${label}`}
+      >
+        <IconPlus />
+      </button>
+    </div>
+  );
+}
+
+function StockBadge({ stock }: { stock: number }) {
+  if (stock <= 0)
+    return (
+      <span className="rounded-full bg-rose-100 px-3 py-1 text-sm font-semibold text-rose-700">
+        Stok habis
+      </span>
+    );
+  if (stock <= LOW_STOCK)
+    return (
+      <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
+        Stok rendah: {stock}
+      </span>
+    );
+  return (
+    <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">
+      Stok: {stock}
+    </span>
+  );
+}
+
 export default function PosScreen({ products }: { products: PosProduct[] }) {
   const router = useRouter();
   const [cart, setCart] = useState<Record<number, number>>({});
   const [notice, setNotice] = useState<Notice>(null);
   const [pending, startTransition] = useTransition();
+  const standalone = useSyncExternalStore(subscribeStandalone, getStandalone, () => false);
 
   const byId = new Map(products.map((p) => [p.id, p]));
   const lines = Object.entries(cart)
     .map(([id, qty]) => ({ product: byId.get(Number(id))!, qty }))
     .filter((l) => l.product);
   const total = lines.reduce((sum, l) => sum + l.product.priceInCoupons * l.qty, 0);
+  const itemCount = lines.reduce((sum, l) => sum + l.qty, 0);
 
   function add(p: PosProduct) {
     setNotice(null);
@@ -64,123 +145,179 @@ export default function PosScreen({ products }: { products: PosProduct[] }) {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-100 text-slate-900 select-none">
-      {/* Kiri: senarai produk (70%) */}
-      <main className="w-[70%] overflow-y-auto p-6">
-        <header className="mb-6 flex items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold">Koperasi Asrama Skubest</h1>
-          <Link
-            href="/admin"
-            className="touch-manipulation rounded-lg bg-slate-800 px-6 py-3 text-xl font-medium text-white active:bg-slate-600"
-          >
-            ⚙ Papan Pemuka Admin
-          </Link>
-        </header>
-        {products.length === 0 ? (
-          <p className="text-xl text-slate-500">Tiada produk. Sila tambah produk dahulu.</p>
-        ) : (
-          <div className="grid grid-cols-3 gap-6">
-            {products.map((p) => {
-              const inCart = cart[p.id] ?? 0;
-              const soldOut = p.stock - inCart <= 0;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  disabled={soldOut}
-                  onClick={() => add(p)}
-                  className="relative flex touch-manipulation flex-col items-center gap-3 rounded-2xl bg-white p-6 text-xl shadow active:scale-95 active:bg-blue-100 disabled:opacity-40"
-                >
-                  {inCart > 0 && (
-                    <span className="absolute right-3 top-3 rounded-full bg-blue-600 px-3 py-1 text-lg font-bold text-white">
-                      {inCart}
-                    </span>
-                  )}
-                  {p.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={p.imageUrl}
-                      alt={p.name}
-                      className="aspect-square w-full rounded-xl object-cover"
-                    />
-                  ) : (
-                    <div className="aspect-square w-full rounded-xl bg-slate-200" />
-                  )}
-                  <span className="font-semibold">{p.name}</span>
-                  <span className="text-2xl font-bold text-blue-700">{p.priceInCoupons} kupon</span>
-                  <span className="text-base text-slate-500">
-                    {soldOut && p.stock === 0 ? "Stok habis" : `Stok: ${p.stock}`}
-                  </span>
-                </button>
-              );
-            })}
+    <div className="flex h-dvh w-full flex-col overflow-hidden bg-slate-50 text-slate-900 select-none">
+      {/* Bar atas */}
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white px-5 py-3 shadow-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-xl font-extrabold text-white">
+            K
           </div>
-        )}
-      </main>
+          <h1 className="truncate text-xl font-bold md:text-2xl">Koperasi Asrama</h1>
+          {standalone && (
+            <span className="hidden rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 sm:inline">
+              Mod Aplikasi
+            </span>
+          )}
+        </div>
+        <Link href="/admin" className={`${btnDark} shrink-0`}>
+          <IconGear />
+          <span>Papan Pemuka Admin</span>
+        </Link>
+      </header>
 
-      {/* Kanan: troli tetap (30%) */}
-      <aside className="flex w-[30%] flex-col border-l-4 border-slate-300 bg-white">
-        <h2 className="p-6 text-3xl font-bold">Troli</h2>
-
-        <div className="flex-1 space-y-3 overflow-y-auto px-6">
-          {lines.length === 0 ? (
-            <p className="text-xl text-slate-500">Ketik produk untuk menambah.</p>
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        {/* Kiri: senarai produk */}
+        <main className="min-h-0 flex-1 overflow-y-auto p-5 lg:w-[70%] lg:flex-none">
+          {products.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-400">
+              <IconBox width="3em" height="3em" />
+              <p className="text-xl">Tiada produk. Sila tambah produk dahulu.</p>
+            </div>
           ) : (
-            lines.map(({ product, qty }) => (
-              <div key={product.id} className="rounded-xl bg-slate-100 p-4">
-                <div className="flex justify-between text-xl font-semibold">
-                  <span>{product.name}</span>
-                  <span>{product.priceInCoupons * qty}</span>
-                </div>
-                <div className="mt-3 flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => remove(product)}
-                    className="touch-manipulation rounded-xl bg-slate-300 p-6 text-xl font-bold active:bg-slate-400"
-                    aria-label={`Kurangkan ${product.name}`}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+              {products.map((p) => {
+                const inCart = cart[p.id] ?? 0;
+                const soldOut = p.stock - inCart <= 0;
+                return (
+                  <div
+                    key={p.id}
+                    className={`flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition ${
+                      inCart > 0 ? "border-indigo-400 ring-2 ring-indigo-200" : "border-slate-200/80"
+                    } ${p.stock <= 0 ? "opacity-60" : ""}`}
                   >
-                    −
-                  </button>
-                  <span className="min-w-8 text-center text-2xl font-bold">{qty}</span>
-                  <button
-                    type="button"
-                    onClick={() => add(product)}
-                    disabled={qty >= product.stock}
-                    className="touch-manipulation rounded-xl bg-slate-300 p-6 text-xl font-bold active:bg-slate-400 disabled:opacity-40"
-                    aria-label={`Tambah ${product.name}`}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+                    <button
+                      type="button"
+                      disabled={soldOut}
+                      onClick={() => add(p)}
+                      className="flex flex-1 touch-manipulation flex-col text-left transition active:bg-indigo-50 disabled:cursor-not-allowed"
+                      aria-label={`Tambah ${p.name} ke troli`}
+                    >
+                      <div className="relative aspect-square w-full bg-slate-100">
+                        {p.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={p.imageUrl}
+                            alt={p.name}
+                            className="h-full w-full object-cover"
+                            draggable={false}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-slate-300">
+                            <IconBox width="3em" height="3em" />
+                          </div>
+                        )}
+                        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-slate-900/85 px-3 py-1.5 text-base font-bold text-white backdrop-blur">
+                          <IconCoins width="1em" height="1em" />
+                          {p.priceInCoupons} kupon
+                        </span>
+                        {inCart > 0 && (
+                          <span className="absolute right-3 top-3 flex h-9 min-w-9 items-center justify-center rounded-full bg-indigo-600 px-2 text-base font-bold text-white shadow">
+                            {inCart}
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-2 p-4 pb-3">
+                        <p className="text-lg font-semibold leading-snug">{p.name}</p>
+                        <StockBadge stock={p.stock} />
+                      </div>
+                    </button>
 
-        <div className="space-y-4 border-t-4 border-slate-300 p-6">
-          {notice && (
-            <p
-              className={`rounded-xl p-4 text-xl font-semibold ${
-                notice.kind === "ok" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-              }`}
-            >
-              {notice.text}
-            </p>
+                    <div className="p-3 pt-0">
+                      {inCart > 0 ? (
+                        <Stepper
+                          qty={inCart}
+                          onMinus={() => remove(p)}
+                          onPlus={() => add(p)}
+                          plusDisabled={soldOut}
+                          label={p.name}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={soldOut}
+                          onClick={() => add(p)}
+                          className="flex min-h-12 w-full touch-manipulation items-center justify-center gap-2 rounded-2xl bg-indigo-50 text-lg font-semibold text-indigo-700 transition active:bg-indigo-100 disabled:bg-slate-100 disabled:text-slate-400"
+                        >
+                          <IconPlus />
+                          Tambah
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
-          <div>
-            <p className="text-xl text-slate-600">Kupon Perlu Dikutip</p>
-            <p className="text-6xl font-extrabold text-blue-700">{total}</p>
+        </main>
+
+        {/* Kanan: troli gaya resit */}
+        <aside className="flex h-[48%] min-h-0 shrink-0 flex-col border-t border-slate-200/80 bg-white shadow-md lg:h-auto lg:w-[30%] lg:border-l lg:border-t-0">
+          <div className="flex items-center justify-between border-b border-dashed border-slate-300 px-5 py-4">
+            <h2 className="flex items-center gap-2 text-2xl font-bold">
+              <IconCart />
+              Troli
+            </h2>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-base font-semibold text-slate-600">
+              {itemCount} item
+            </span>
           </div>
-          <button
-            type="button"
-            onClick={confirmSale}
-            disabled={lines.length === 0 || pending}
-            className="w-full touch-manipulation rounded-2xl bg-green-600 p-6 text-3xl font-extrabold text-white active:bg-green-800 disabled:bg-slate-300 disabled:text-slate-500"
-          >
-            {pending ? "Memproses..." : "Sahkan Jualan"}
-          </button>
-        </div>
-      </aside>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-3">
+            {lines.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-slate-400">
+                <IconCart width="2.5em" height="2.5em" />
+                <p className="text-lg">Ketik produk untuk menambah.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-dashed divide-slate-200">
+                {lines.map(({ product, qty }) => (
+                  <li key={product.id} className="space-y-2 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-lg font-semibold leading-snug">{product.name}</p>
+                        <p className="text-base text-slate-500">
+                          {qty} × {product.priceInCoupons} kupon
+                        </p>
+                      </div>
+                      <p className="text-xl font-bold tabular-nums">
+                        {product.priceInCoupons * qty}
+                      </p>
+                    </div>
+                    <Stepper
+                      qty={qty}
+                      onMinus={() => remove(product)}
+                      onPlus={() => add(product)}
+                      plusDisabled={qty >= product.stock}
+                      label={product.name}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="pb-[max(1rem,env(safe-area-inset-bottom))] shrink-0 space-y-3 border-t border-dashed border-slate-300 bg-slate-50/60 px-5 pt-4">
+            {notice && (
+              <p className={notice.kind === "ok" ? alertOk : alertErr}>{notice.text}</p>
+            )}
+            <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 px-5 py-4 text-white shadow-md">
+              <p className="text-sm font-medium uppercase tracking-wide text-indigo-100">
+                Kupon Perlu Dikutip
+              </p>
+              <p className="text-5xl font-extrabold tabular-nums leading-tight">{total}</p>
+            </div>
+            <button
+              type="button"
+              onClick={confirmSale}
+              disabled={lines.length === 0 || pending}
+              className="flex min-h-16 w-full touch-manipulation items-center justify-center gap-3 rounded-2xl bg-emerald-600 text-2xl font-extrabold text-white shadow-md transition active:scale-[0.99] active:bg-emerald-800 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none"
+            >
+              <IconCheck width="1.2em" height="1.2em" />
+              {pending ? "Memproses..." : "Bayar Sekarang"}
+            </button>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

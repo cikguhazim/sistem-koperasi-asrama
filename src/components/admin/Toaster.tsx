@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { IconCheck } from "@/components/icons";
 
 export type ToastDetail = { kind: "ok" | "error"; text: string };
 
@@ -29,11 +30,12 @@ export default function Toaster() {
   return (
     <div
       role="status"
-      className={`fixed bottom-6 left-1/2 z-50 w-[90%] max-w-xl -translate-x-1/2 rounded-2xl p-5 text-xl font-semibold shadow-lg ${
-        toast.kind === "ok" ? "bg-green-600 text-white" : "bg-red-600 text-white"
+      className={`fixed bottom-6 left-1/2 z-50 flex w-[90%] max-w-xl -translate-x-1/2 items-center gap-3 rounded-2xl px-5 py-4 text-lg font-semibold text-white shadow-xl ${
+        toast.kind === "ok" ? "bg-emerald-600" : "bg-rose-600"
       }`}
     >
-      {toast.text}
+      {toast.kind === "ok" && <IconCheck />}
+      <span>{toast.text}</span>
     </div>
   );
 }
