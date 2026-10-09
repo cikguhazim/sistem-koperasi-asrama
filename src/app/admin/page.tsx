@@ -54,6 +54,7 @@ async function AdminContent({
     name: p.name,
     category: p.category,
     imageUrl: p.imageUrl,
+    priceInCoupons: p.priceInCoupons,
     stock: p.inventory?.quantity ?? 0,
   }));
 

@@ -9,6 +9,7 @@ export type ManagedProduct = {
   name: string;
   category: string;
   imageUrl: string | null;
+  priceInCoupons: number;
   stock: number;
 };
 
@@ -17,13 +18,14 @@ const inputClass =
 
 function ProductRow({ product }: { product: ManagedProduct }) {
   const [stock, setStock] = useState(String(product.stock));
+  const [price, setPrice] = useState(String(product.priceInCoupons));
   const [imageUrl, setImageUrl] = useState(product.imageUrl ?? "");
   const [result, setResult] = useState<ActionResult | null>(null);
   const [pending, startTransition] = useTransition();
 
   function onUpdate() {
     startTransition(async () => {
-      setResult(await updateProduct(product.id, Number(stock), imageUrl));
+      setResult(await updateProduct(product.id, Number(stock), imageUrl, Number(price)));
     });
   }
 
@@ -56,7 +58,18 @@ function ProductRow({ product }: { product: ManagedProduct }) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[10rem_1fr]">
+      <div className="grid gap-4 md:grid-cols-[8rem_8rem_1fr]">
+        <label className="block space-y-2 text-lg">
+          <span>Harga Kupon</span>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className={inputClass}
+          />
+        </label>
         <label className="block space-y-2 text-lg">
           <span>Stok Semasa</span>
           <input
@@ -119,7 +132,7 @@ export default function ManageProducts({ products }: { products: ManagedProduct[
     <div className="grid gap-6 md:grid-cols-2">
       {products.map((p) => (
         // key termasuk nilai pelayan supaya borang dimuat semula selepas kemaskini
-        <ProductRow key={`${p.id}-${p.stock}-${p.imageUrl ?? ""}`} product={p} />
+        <ProductRow key={`${p.id}-${p.priceInCoupons}-${p.stock}-${p.imageUrl ?? ""}`} product={p} />
       ))}
     </div>
   );

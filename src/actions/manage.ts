@@ -19,6 +19,7 @@ export async function updateProduct(
   productId: number,
   newStock: number,
   newImageUrl: string,
+  newPriceInCoupons: number,
 ): Promise<ActionResult> {
   if (!(await isAdmin())) return UNAUTHORIZED;
 
@@ -27,6 +28,9 @@ export async function updateProduct(
   }
   if (!Number.isInteger(newStock) || newStock < 0) {
     return { success: false, message: "Stok mestilah nombor bulat 0 atau lebih." };
+  }
+  if (!Number.isInteger(newPriceInCoupons) || newPriceInCoupons <= 0) {
+    return { success: false, message: "Harga kupon mestilah nombor bulat lebih daripada 0." };
   }
   const imageUrl = String(newImageUrl ?? "").trim();
   if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
@@ -40,7 +44,7 @@ export async function updateProduct(
 
       await tx.product.update({
         where: { id: productId },
-        data: { imageUrl: imageUrl || null },
+        data: { imageUrl: imageUrl || null, priceInCoupons: newPriceInCoupons },
       });
       await tx.inventory.upsert({
         where: { productId },
