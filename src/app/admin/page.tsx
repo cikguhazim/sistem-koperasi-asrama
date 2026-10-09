@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 import AddProductForm from "@/components/admin/AddProductForm";
 import AddStockForm from "@/components/admin/AddStockForm";
+import ManageProducts from "@/components/admin/ManageProducts";
 
 const PAGE_SIZE = 20;
 
@@ -48,6 +49,14 @@ async function AdminContent({
     stock: p.inventory?.quantity ?? 0,
   }));
 
+  const managedProducts = products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    imageUrl: p.imageUrl,
+    stock: p.inventory?.quantity ?? 0,
+  }));
+
   const linkClass =
     "touch-manipulation rounded-xl bg-blue-600 px-6 py-4 text-xl font-bold text-white active:bg-blue-800";
   const disabledClass =
@@ -68,6 +77,11 @@ async function AdminContent({
         <AddProductForm />
         <AddStockForm products={stockProducts} />
       </div>
+
+      <section className="space-y-4 rounded-2xl bg-white p-6 shadow">
+        <h2 className="text-2xl font-bold">Urus Produk</h2>
+        <ManageProducts products={managedProducts} />
+      </section>
 
       <section className="space-y-4 rounded-2xl bg-white p-6 shadow">
         <h2 className="text-2xl font-bold">Log Transaksi</h2>

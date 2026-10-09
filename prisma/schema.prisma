@@ -30,14 +30,14 @@ model Product {
 
 model Inventory {
   id        Int     @id @default(autoincrement())
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId Int     @unique
   quantity  Int     @default(0)
 }
 
 model Transaction {
   id          Int             @id @default(autoincrement())
-  product     Product         @relation(fields: [productId], references: [id])
+  product     Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId   Int
   type        TransactionType
   couponTotal Int

@@ -1,17 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { ADMIN_COOKIE, isValidToken } from "@/lib/auth";
+import { isAdmin } from "@/lib/session";
 
 export type ActionResult =
   | { success: true; message: string }
   | { success: false; message: string };
-
-async function isAdmin() {
-  return isValidToken((await cookies()).get(ADMIN_COOKIE)?.value);
-}
 
 const UNAUTHORIZED: ActionResult = {
   success: false,
