@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { completeSale } from "@/actions/checkout";
 import Logo from "@/components/Logo";
+import VirtualKeyboard from "@/components/pos/VirtualKeyboard";
 import { alertErr, alertOk } from "@/lib/ui";
 import {
   IconBox,
@@ -14,6 +15,8 @@ import {
   IconGear,
   IconMinus,
   IconPlus,
+  IconSearch,
+  IconX,
 } from "@/components/icons";
 
 export type PosProduct = {
@@ -21,6 +24,7 @@ export type PosProduct = {
   name: string;
   priceInCoupons: number;
   imageUrl: string | null;
+  category: string;
   stock: number;
 };
 
@@ -100,6 +104,8 @@ export default function PosScreen({ products }: { products: PosProduct[] }) {
   const [cart, setCart] = useState<Record<number, number>>({});
   const [notice, setNotice] = useState<Notice>(null);
   const [pending, startTransition] = useTransition();
+  const [query, setQuery] = useState("");
+  const [kbOpen, setKbOpen] = useState(false);
   const standalone = useSyncExternalStore(subscribeStandalone, getStandalone, () => false);
 
   const byId = new Map(products.map((p) => [p.id, p]));
@@ -108,6 +114,13 @@ export default function PosScreen({ products }: { products: PosProduct[] }) {
     .filter((l) => l.product);
   const total = lines.reduce((sum, l) => sum + l.product.priceInCoupons * l.qty, 0);
   const itemCount = lines.reduce((sum, l) => sum + l.qty, 0);
+
+  const q = query.trim().toLowerCase();
+  const visible = q
+    ? products.filter(
+        (p) => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q),
+      )
+    : products;
 
   function add(p: PosProduct) {
     setNotice(null);
@@ -169,16 +182,56 @@ export default function PosScreen({ products }: { products: PosProduct[] }) {
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* Kiri: senarai produk */}
-        <main className="min-h-0 flex-1 overflow-y-auto p-5 lg:w-[70%] lg:flex-none">
+        {/* Kiri: carian + senarai produk + papan kekunci maya */}
+        <section className="flex min-h-0 flex-1 flex-col lg:w-[70%] lg:flex-none">
+          <div className="shrink-0 border-b border-slate-200/80 bg-white px-5 py-3">
+            <div
+              className={`flex items-center gap-3 rounded-2xl border bg-slate-50 pl-4 pr-2 transition ${
+                kbOpen
+                  ? "border-indigo-500 ring-4 ring-indigo-100"
+                  : "border-slate-300"
+              }`}
+            >
+              <IconSearch className="shrink-0 text-slate-400" width="1.4em" height="1.4em" />
+              <input
+                type="text"
+                readOnly
+                inputMode="none"
+                value={query}
+                onClick={() => setKbOpen(true)}
+                onFocus={() => setKbOpen(true)}
+                placeholder="Cari produk atau kategori..."
+                aria-label="Cari produk atau kategori"
+                className="min-h-14 min-w-0 flex-1 cursor-pointer bg-transparent text-xl text-slate-900 placeholder:text-slate-400 focus:outline-none"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Kosongkan carian"
+                  className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-xl text-slate-500 transition active:scale-95 active:bg-slate-200"
+                >
+                  <IconX />
+                </button>
+              )}
+            </div>
+          </div>
+
+        <main className="min-h-0 flex-1 overflow-y-auto p-5">
           {products.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-400">
               <IconBox width="3em" height="3em" />
               <p className="text-xl">Tiada produk. Sila tambah produk dahulu.</p>
             </div>
+          ) : visible.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-400">
+              <IconSearch width="3em" height="3em" />
+              <p className="text-xl font-medium">Tiada barangan ditemui</p>
+              <p className="text-base">Cuba kata kunci lain atau kosongkan carian.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-              {products.map((p) => {
+              {visible.map((p) => {
                 const inCart = cart[p.id] ?? 0;
                 const soldOut = p.stock - inCart <= 0;
                 return (
@@ -252,6 +305,16 @@ export default function PosScreen({ products }: { products: PosProduct[] }) {
             </div>
           )}
         </main>
+
+          {kbOpen && (
+            <VirtualKeyboard
+              onChar={(c) => setQuery((v) => v + c)}
+              onBackspace={() => setQuery((v) => v.slice(0, -1))}
+              onClear={() => setQuery("")}
+              onClose={() => setKbOpen(false)}
+            />
+          )}
+        </section>
 
         {/* Kanan: troli gaya resit */}
         <aside className="flex h-[48%] min-h-0 shrink-0 flex-col border-t border-slate-200/80 bg-white shadow-md lg:h-auto lg:w-[30%] lg:border-l lg:border-t-0">

@@ -15,6 +15,7 @@ async function Products() {
     name: p.name,
     priceInCoupons: p.priceInCoupons,
     imageUrl: p.imageUrl,
+    category: p.category,
     stock: p.inventory?.quantity ?? 0,
   }));
 

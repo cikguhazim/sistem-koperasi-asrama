@@ -109,3 +109,14 @@ export const IconList = (p: P) => (
     <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
   </Svg>
 );
+export const IconSearch = (p: P) => (
+  <Svg {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m21 21-4.3-4.3" />
+  </Svg>
+);
+export const IconX = (p: P) => (
+  <Svg {...p}>
+    <path d="M18 6 6 18M6 6l12 12" />
+  </Svg>
+);
