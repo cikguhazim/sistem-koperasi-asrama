@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionType {
+  IN
+  OUT
+}
+
+model Product {
+  id             Int      @id @default(autoincrement())
+  name           String
+  priceInCoupons Int
+  imageUrl       String?
+  category       String
+
+  inventory      Inventory?
+  transactions   Transaction[]
+}
+
+model Inventory {
+  id        Int     @id @default(autoincrement())
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @unique
+  quantity  Int     @default(0)
+}
+
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  product     Product         @relation(fields: [productId], references: [id])
+  productId   Int
+  type        TransactionType
+  couponTotal Int
+  createdAt   DateTime        @default(now())
+
+  @@index([productId])
+}
+
+model RegisterDrawer {
+  id                       Int @id @default(autoincrement())
+  expectedPhysicalCoupons  Int @default(0)
+}
