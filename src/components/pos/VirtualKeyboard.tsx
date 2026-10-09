@@ -56,16 +56,16 @@ export default function VirtualKeyboard({ onChar, onBackspace, onClear, onClose 
       ))}
 
       <div className="flex justify-center gap-2">
-        <button type="button" onClick={onClose} className={`${keyAction} max-w-[8rem] text-lg`}>
+        <button type="button" onClick={onClose} className={`${keyAction} flex-none px-4 text-base`}>
           Tutup
         </button>
-        <button type="button" onClick={() => onChar(" ")} className={`${keyNormal} flex-[4]`}>
+        <button type="button" onClick={() => onChar(" ")} className={`${keyNormal} flex-1`}>
           Ruang
         </button>
         <button
           type="button"
           onClick={onClear}
-          className={`${key} max-w-[12rem] whitespace-nowrap bg-rose-100 text-lg text-rose-700 active:bg-rose-200`}
+          className={`${key} flex-none whitespace-nowrap bg-rose-100 px-4 text-base text-rose-700 active:bg-rose-200`}
         >
           Padam Semua
         </button>
