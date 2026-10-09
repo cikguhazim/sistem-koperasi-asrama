@@ -52,7 +52,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult> {
       });
       if (stock > 0) {
         await tx.transaction.create({
-          data: { productId: product.id, type: "IN", couponTotal: price * stock },
+          data: { productId: product.id, type: "IN", couponTotal: price * stock, quantity: stock },
         });
       }
     });
@@ -91,6 +91,7 @@ export async function addStock(formData: FormData): Promise<ActionResult> {
           productId,
           type: "IN",
           couponTotal: product.priceInCoupons * quantity,
+          quantity,
         },
       });
       return product.name;

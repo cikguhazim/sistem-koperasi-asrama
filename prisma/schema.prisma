@@ -41,6 +41,7 @@ model Transaction {
   productId   Int
   type        TransactionType
   couponTotal Int
+  quantity    Int?
   createdAt   DateTime        @default(now())
 
   @@index([productId])

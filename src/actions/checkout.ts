@@ -54,7 +54,7 @@ export async function completeSale(
         saleTotal += lineTotal;
 
         await tx.transaction.create({
-          data: { productId, type: "OUT", couponTotal: lineTotal },
+          data: { productId, type: "OUT", couponTotal: lineTotal, quantity },
         });
       }
 

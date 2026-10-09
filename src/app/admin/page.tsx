@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import AddProductForm from "@/components/admin/AddProductForm";
 import AddStockForm from "@/components/admin/AddStockForm";
 import ManageProducts from "@/components/admin/ManageProducts";
+import DeleteTransactionButton from "@/components/admin/DeleteTransactionButton";
+import Toaster from "@/components/admin/Toaster";
 
 const PAGE_SIZE = 20;
 
@@ -65,6 +67,7 @@ async function AdminContent({
 
   return (
     <>
+      <Toaster />
       <section className="rounded-2xl bg-white p-6 shadow">
         <p className="text-xl text-slate-600">
           Kupon Fizikal Dijangka dalam Peti Wang
@@ -99,6 +102,7 @@ async function AdminContent({
                   <th className="p-3">Produk</th>
                   <th className="p-3">Jenis</th>
                   <th className="p-3 text-right">Jumlah Kupon</th>
+                  <th className="p-3 text-right">Tindakan</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,6 +124,9 @@ async function AdminContent({
                     </td>
                     <td className="p-3 text-right font-semibold">
                       {t.couponTotal}
+                    </td>
+                    <td className="p-3 text-right">
+                      <DeleteTransactionButton id={t.id} />
                     </td>
                   </tr>
                 ))}
