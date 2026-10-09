@@ -3,7 +3,8 @@ import Link from "next/link";
 import { login } from "@/actions/auth";
 import PasswordField from "@/components/PasswordField";
 import { alertErr, btnPrimary, card, label } from "@/lib/ui";
-import { IconArrowLeft, IconLock } from "@/components/icons";
+import Logo from "@/components/Logo";
+import { IconArrowLeft } from "@/components/icons";
 
 async function LoginForm({
   searchParams,
@@ -15,9 +16,7 @@ async function LoginForm({
   return (
     <form action={login} className={`${card} w-full max-w-md space-y-6 p-8 shadow-md`}>
       <div className="space-y-3 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md">
-          <IconLock width="1.8em" height="1.8em" />
-        </div>
+        <Logo className="mx-auto h-24" />
         <h1 className="text-3xl font-bold">Log Masuk</h1>
         <p className="text-base text-slate-500">Khas untuk pentadbir koperasi.</p>
       </div>

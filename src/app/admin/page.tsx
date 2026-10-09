@@ -2,12 +2,14 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { logout } from "@/actions/auth";
 import { btnBase, btnDark, btnPrimary, card } from "@/lib/ui";
 import AddProductForm from "@/components/admin/AddProductForm";
 import AddStockForm from "@/components/admin/AddStockForm";
 import ManageProducts from "@/components/admin/ManageProducts";
 import DeleteTransactionButton from "@/components/admin/DeleteTransactionButton";
 import Toaster from "@/components/admin/Toaster";
+import Logo from "@/components/Logo";
 import {
   IconArrowLeft,
   IconBox,
@@ -233,15 +235,16 @@ export default function AdminPage({
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-xl font-extrabold text-white">
-              K
-            </div>
+            <Logo className="h-12" />
             <h1 className="text-xl font-bold md:text-2xl">Papan Pemuka Admin</h1>
           </div>
-          <Link href="/" className={btnDark}>
-            <IconArrowLeft />
-            Kembali ke POS
-          </Link>
+          {/* Borang (bukan pautan) supaya sesi admin ditamatkan apabila keluar */}
+          <form action={logout}>
+            <button type="submit" className={btnDark}>
+              <IconArrowLeft />
+              Kembali ke POS
+            </button>
+          </form>
         </div>
       </header>
 

@@ -16,7 +16,13 @@ export async function login(formData: FormData) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 12, // 12 jam
+    maxAge: 60 * 30, // 30 minit sahaja
   });
   redirect("/admin");
+}
+
+// Tamatkan sesi admin dan kembali ke skrin POS.
+export async function logout() {
+  (await cookies()).delete(ADMIN_COOKIE);
+  redirect("/");
 }
