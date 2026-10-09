@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { completeSale } from "@/actions/checkout";
 
@@ -66,7 +67,15 @@ export default function PosScreen({ products }: { products: PosProduct[] }) {
     <div className="flex h-screen w-full overflow-hidden bg-slate-100 text-slate-900 select-none">
       {/* Kiri: senarai produk (70%) */}
       <main className="w-[70%] overflow-y-auto p-6">
-        <h1 className="mb-6 text-3xl font-bold">Koperasi Asrama Skubest</h1>
+        <header className="mb-6 flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold">Koperasi Asrama Skubest</h1>
+          <Link
+            href="/admin"
+            className="touch-manipulation rounded-lg bg-slate-800 px-6 py-3 text-xl font-medium text-white active:bg-slate-600"
+          >
+            ⚙ Papan Pemuka Admin
+          </Link>
+        </header>
         {products.length === 0 ? (
           <p className="text-xl text-slate-500">Tiada produk. Sila tambah produk dahulu.</p>
         ) : (

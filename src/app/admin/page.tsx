@@ -166,7 +166,15 @@ export default function AdminPage({
 }) {
   return (
     <main className="mx-auto w-full max-w-5xl space-y-6 bg-slate-100 p-6 text-slate-900">
-      <h1 className="text-3xl font-bold">Papan Pemuka Admin</h1>
+      <header className="flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold">Papan Pemuka Admin</h1>
+        <Link
+          href="/"
+          className="touch-manipulation rounded-lg bg-slate-800 px-6 py-3 text-xl font-medium text-white active:bg-slate-600"
+        >
+          ← Kembali ke POS
+        </Link>
+      </header>
       <Suspense fallback={<p className="text-2xl">Memuatkan...</p>}>
         <AdminContent searchParams={searchParams} />
       </Suspense>
